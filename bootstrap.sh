@@ -111,6 +111,15 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/too
 bash iTerm-fish.sh
 
 # Install VS Code
+# Install HTB.terminal profile and set it as default
+echo "Installing HTB.terminal profile..."
+if [ ! -f HTB.terminal ]; then
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide-htb.terminal" -o HTB.terminal
+fi
+open HTB.terminal
+defaults write com.apple.Terminal "Default Window Settings" "HTB"
+defaults write com.apple.Terminal "Startup Window Settings" "HTB"
+
 brew install --cask visual-studio-code
 
 # Clone your dotfiles and set them up
