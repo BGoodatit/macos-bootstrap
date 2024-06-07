@@ -111,6 +111,21 @@ if ! command -v curl &>/dev/null || ! command -v tar &>/dev/null; then
   exit 1
 fi
 
+# Install Riptide-htb.itermcolors profile and set it as default
+echo "Installing Riptide-htb.itermcolors profile..."
+if [ ! -f Riptide-htb.itermcolors ]; then
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide-htb.itermcolors" -o Riptide-htb.itermcolors
+fi
+open Riptide-htb.itermcolors
+defaults write com.googlecode.iterm2 "Default Bookmark" "Riptide-htb"
+defaults write com.googlecode.iterm2 "New Bookmarks" -array-add "Riptide-htb"
+
+# Import riptide.json configuration
+echo "Importing riptide.json configuration..."
+if [ ! -f riptide.json ]; then
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide.json" -o riptide.json
+fi
+defaults import com.googlecode.iterm2 riptide.json
 # Temporary directory for the installation files
 tide_tmp_dir=$(mktemp -d)
 
