@@ -108,8 +108,7 @@ brew install fish
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Set up Fish shell
-curl -L https://get.oh-my.fish | fish
-fish -c "omf install bobthefish"
+bash iTerm-fish.sh
 
 # Install VS Code
 brew install --cask visual-studio-code
