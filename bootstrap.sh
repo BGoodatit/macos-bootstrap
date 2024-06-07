@@ -51,27 +51,48 @@ if [ "$has_brew" -eq 0 ]; then
 
   source /Users/${USER}/.bash_profile
 
-  # turn off brew analytics
-  brew analytics off
-fi
-
-# update brew
+brew analytics off
 brew update
+brew upgrade
 
-# run brewfile to install packages
-#brew bundle install
+# Install and configure rbenv and Ruby
+brew install rbenv
+echo 'if command -v rbenv &>/dev/null; then eval "$(rbenv init -)"; fi' >>~/.bash_profile
+echo 'if command -v rbenv &>/dev/null; then eval "$(rbenv init -)"; fi' >>~/.zprofile
+echo 'status is-login; and source (rbenv init -|psub)' >>~/.config/fish/config.fish
 
-# check for issues
-brew doctor
+latest_ruby=$(rbenv install -l | grep -v - | tail -1)
+rbenv install $latest_ruby && rbenv global $latest_ruby
+echo "Ruby $latest_ruby installed."
 
-# set brew to update every 12 hours (in seconds)
+# Install and configure pyenv and Python
+brew install pyenv
+echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init --path)"; fi' >>~/.zprofile
+echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init -)"; fi' >>~/.bash_profile
+echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init --path)"; fi' >>~/.bashrc
+echo 'status is-login; and source (pyenv init -|psub)' >>~/.config/fish/config.fish
+
+latest_python=$(pyenv install -l | grep -v - | grep -v b | tail -1)
+pyenv install $latest_python && pyenv global $latest_python
+echo "Python $latest_python installed."
+
+# Install Node.js and npm using n
+brew install n
+n stable
+
+# Install Yarn
+brew install yarn
+
+# Set Homebrew to update automatically every 12 hours
 brew autoupdate start 43200
 
-# show brew auto update status for feedback
-brew autoupdate status
+# Refresh shell environments
+source ~/.zshrc
+source ~/.bashrc
+source ~/.config/fish/config.fish
 
-# display outdated apps and auto-update status
-brew cu --include-mas
+echo "Installation complete. Please restart your terminal."
+
 
 #EOF
 
