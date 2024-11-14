@@ -84,18 +84,21 @@ echo "Installation complete. Please restart your terminal."
 #EOF
 
 # Install essential packages
-brew install git
-brew install wget
-brew install node
-brew install python
-brew install zsh
-brew install fish
+# Install essential packages with error handling
+install_package() {
+  local package_name="$1"
+  if ! brew install "$package_name"; then
+    echo "Error installing $package_name. Please check your Homebrew setup." >&2
+    exit 1
+  fi
+}
 
-# Set up Oh My Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Set up Fish shell
-bash iTerm-fish.sh
+install_package git
+install_package wget
+install_package node
+install_package python
+install_package zsh
+install_package fish
 
 # Install VS Code
 # Install HTB.terminal profile and set it as default
