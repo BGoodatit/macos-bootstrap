@@ -11,20 +11,17 @@ if [[ "$(uname -m)" == "arm64" ]] && ! /usr/libexec/rosetta --help &>/dev/null; 
 fi
 
 # install xcode cli tools
-command -v "xcode-select -p" >/dev/null 2>&1
-has_xcode=1 || { has_xcode=0; }
-if [ "$has_xcode" -eq 0 ]; then
-  echo "Installing XCode CLI Tools..."
+if ! xcode-select -p &>/dev/null; then
+  echo "Installing Xcode Command Line Tools..."
   sudo xcode-select --install
+  until xcode-select -p &>/dev/null; do
+    sleep 5
+  done
 else
   # show path
   xcode-select -p
   # show version
   xcode-select --version
-  # show compiler version
-  #gcc -v
-  #llvm-gcc -v
-  #clang -v
 fi
 
 # install homebrew
