@@ -2,6 +2,10 @@
 # Author  : Chad Mayfield (chad@chadmayfield.com)
 # License : GPLv3
 
+# Common URLs
+HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+DOTFILES_REPO="https://github.com/BGoodatit/dotfiles.git"
+
 # setup macOS using Homebrew
 
 # install rosetta on apple silicon
