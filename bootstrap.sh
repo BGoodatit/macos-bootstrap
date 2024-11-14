@@ -5,13 +5,9 @@
 # setup macOS using Homebrew
 
 # install rosetta on apple silicon
-if [[ "$(sysctl -n machdep.cpu.brand_string)" == *'Apple'* ]]; then
-  if [ ! -d "/usr/libexec/rosetta" ]; then
-    echo "Installing Rosetta..."
-    sudo softwareupdate --install-rosetta --agree-to-license
-  fi
-  # show our install history, we should have rosetta
-  sudo softwareupdate --history
+if [[ "$(uname -m)" == "arm64" ]] && ! /usr/libexec/rosetta --help &>/dev/null; then
+  echo "Installing Rosetta..."
+  sudo softwareupdate --install-rosetta --agree-to-license
 fi
 
 # install xcode cli tools
