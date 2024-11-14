@@ -25,25 +25,19 @@ else
 fi
 
 # install homebrew
-command -v brew >/dev/null 2>&1
-has_brew=1 || { has_brew=0; }
-if [ "$has_brew" -eq 0 ]; then
+if command -v brew &>/dev/null; then
+  echo "Homebrew is already installed."
+else
   echo "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile
+  echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.bash_profile
+fi
 
-  # add 'brew --prefix' location to $PATH
-  # https://applehelpwriter.com/2018/03/21/how-homebrew-invites-users-to-get-pwned/
-  # https://www.n00py.io/2016/10/privilege-escalation-on-os-x-without-exploits/
-  if [[ "$(sysctl -n machdep.cpu.brand_string)" == *'Apple'* ]]; then
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>/Users/${USER}/.zprofile
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>/Users/${USER}/.bash_profile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  else
-    echo 'export PATH="/usr/local/sbin:$PATH"' >>/Users/${USER}/.bash_profile
-  fi
-
-  source /Users/${USER}/.bash_profile
-
+brew analytics off
+brew update
+brew upgrade
 brew analytics off
 brew update
 brew upgrade
