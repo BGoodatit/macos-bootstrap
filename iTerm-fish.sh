@@ -129,14 +129,12 @@ defaults import com.googlecode.iterm2 riptide.json
 # Temporary directory for the installation files
 tide_tmp_dir=$(mktemp -d)
 
-echo "Downloading Tide from your repository..."
-curl -L https://codeload.github.com/BGoodatit/tide/tar.gz/HEAD | tar -xzC "$tide_tmp_dir"
+# Download Tide prompt from the official source
+print_info "Downloading Tide from the official repository..."
+curl -L https://git.io/tide | fish
 
-echo "Installing Tide..."
-mkdir -p ~/.config/fish
-cp -R "$tide_tmp_dir/tide-HEAD/"{completions,conf.d,functions} ~/.config/fish
-
-echo "Applying default configurations..."
+# Configure Tide with default options
+print_info "Configuring Tide prompt..."
 fish -c "tide configure style=lean"
 fish -c "tide configure prompt_colors=true_color"
 fish -c "tide configure time_format=12_hour"
@@ -145,6 +143,10 @@ fish -c "tide configure prompt_connection=disconnected"
 fish -c "tide configure prompt_spacing=sparse"
 fish -c "tide configure icons=few_icons"
 fish -c "source ~/.config/fish/conf.d/_tide_init.fish"
+fish -c "exec fish --init-command 'set -g fish_greeting; emit _tide_init_install'"
+
+print_success "Tide installation and configuration complete. Restart your Fish shell to apply changes."
+rm -r "$tide_tmp_dir"
 fish -c "exec fish --init-command 'set -g fish_greeting; emit _tide_init_install'"
 
 echo "Installation completed. Please restart your Fish shell."
