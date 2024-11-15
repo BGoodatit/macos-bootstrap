@@ -121,11 +121,11 @@ defaults write com.googlecode.iterm2 "Default Bookmark" "Riptide-htb"
 defaults write com.googlecode.iterm2 "New Bookmarks" -array-add "Riptide-htb"
 
 # Import riptide.json configuration
-echo "Importing riptide.json configuration..."
-if [ ! -f riptide.json ]; then
-  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide.json" -o riptide.json
+# Import iTerm2-Riptide.json configuration
+if [ ! -f iTerm2-Riptide.json ]; then
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/iTerm2-Riptide.json" -o iTerm2-Riptide.json
 fi
-defaults import com.googlecode.iterm2 riptide.json
+defaults import com.googlecode.iterm2 iTerm2-Riptide.json
 # Temporary directory for the installation files
 tide_tmp_dir=$(mktemp -d)
 
