@@ -116,9 +116,24 @@ defaults write com.apple.Terminal "Startup Window Settings" "HTB"
 
 brew install --cask visual-studio-code
 
-# Clone your dotfiles and set them up
-git clone https://github.com/BGoodatit/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-./install.sh
+# Clone your dotfiles into .files and create symlinks in home directory
+DOTFILES_DIR="$HOME/.files"
+
+# Clone dotfiles repository if it doesn’t already exist
+if [ ! -d "$DOTFILES_DIR" ]; then
+  git clone $DOTFILES_REPO "$DOTFILES_DIR"
+fi
+
+# Create symlinks for each dotfile in .files
+for item in "$DOTFILES_DIR"/.*; do
+  # Skip special files
+  if [[ "$item" == "$DOTFILES_DIR/." || "$item" == "$DOTFILES_DIR/.." || "$item" == "$DOTFILES_DIR/.git" ]]; then
+    continue
+  fi
+  ln -sf "$item" "$HOME/$(basename "$item")"
+  echo "Linked $(basename "$item")"
+done
+
+
 
 echo "Bootstrap complete!"
