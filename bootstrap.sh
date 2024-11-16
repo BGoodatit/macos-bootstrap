@@ -8,6 +8,7 @@ set -ueo pipefail
 HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 DOTFILES_REPO="https://github.com/BGoodatit/dotfiles.git"
 DOTFILES_DIR="$HOME/.files"
+LOG_FILE="bootstrap.log"
 
 # Function for installing packages with error handling
 install_package() {
@@ -17,6 +18,10 @@ install_package() {
     exit 1
   fi
 }
+
+# Set up logging
+exec > >(tee -i "$LOG_FILE")
+exec 2>&1
 
 # Check Internet Connectivity
 if ! ping -c 1 google.com &>/dev/null; then
@@ -105,12 +110,27 @@ if [ ! -d "$DOTFILES_DIR" ]; then
   fi
 fi
 
+# Create backup directory
+BACKUP_DIR="$HOME/.files_backup"
+mkdir -p "$BACKUP_DIR"
+
 # Create symlinks for dotfiles
 for item in "$DOTFILES_DIR"/.*; do
+  target="$HOME/$(basename "$item")"
+
+  # Skip special files
   if [[ "$item" == "$DOTFILES_DIR/." || "$item" == "$DOTFILES_DIR/.." || "$item" == "$DOTFILES_DIR/.git" ]]; then
     continue
   fi
-  ln -sf "$item" "$HOME/$(basename "$item")"
+
+  # If target exists and is not a symlink, back it up
+  if [ -e "$target" ] && [ ! -L "$target" ]; then
+    mv "$target" "$BACKUP_DIR"
+    echo "Backed up $target to $BACKUP_DIR"
+  fi
+
+  # Create symlink
+  ln -sf "$item" "$target"
   echo "Linked $(basename "$item")"
 done
 
