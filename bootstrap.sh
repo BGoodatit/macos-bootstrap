@@ -131,12 +131,10 @@ echo "Cleaning up..."
 rm -rf "$DOTFILES_DIR/tmp"
 
 echo "Bootstrap and installation complete. Restart your terminal!"
-  echo "Error: Fish shell installation failed."
-  exit 1
-fi
 
 # Cleanup Temporary Files
 echo "Cleaning up..."
 rm -rf "$DOTFILES_DIR/tmp"
 
+echo "Bootstrap and installation complete. Restart your terminal!"
 echo "Bootstrap and installation complete. Restart your terminal!"
