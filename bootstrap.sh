@@ -82,65 +82,39 @@ install_package fish &
 install_package --cask visual-studio-code &
 wait
 
-# Set up rbenv and Ruby
-if command -v rbenv &>/dev/null; then
-  latest_ruby=$(rbenv install -l | grep -v - | tail -1)
-  rbenv install $latest_ruby && rbenv global $latest_ruby
-  echo "Ruby $latest_ruby installed."
+# Add security configurations
+log "Configuring macOS security settings:"
+sudo defaults write com.apple.screensaver askForPassword -int 1
+sudo defaults write com.apple.screensaver askForPasswordDelay -int 0
+sudo defaults write /Library/Preferences/com.apple.alf globalstate -int 1
+sudo launchctl load /System/Library/LaunchDaemons/com.apple.alf.agent.plist 2>/dev/null
+logk
+
+# Check and enable full-disk encryption
+log "Checking FileVault status:"
+if fdesetup status | grep -E "FileVault is (On|Off, but will be enabled after the next restart)."; then
+  logk
+else
+  echo "FileVault not enabled. Enabling it now."
+  sudo fdesetup enable -user "$USER" | tee "$HOME/Desktop/FileVault_Recovery_Key.txt"
+  logk
 fi
 
-# Set up pyenv and Python
-if command -v pyenv &>/dev/null; then
-  latest_python=$(pyenv install -l | grep -v - | grep -v b | tail -1)
-  pyenv install $latest_python && pyenv global $latest_python
-  echo "Python $latest_python installed."
+# Prevent sleep during execution
+caffeinate -s -w $$ &
+
+# TouchID setup for sudo
+log "Configuring TouchID for sudo authentication:"
+if grep -q pam_tid /etc/pam.d/sudo /etc/pam.d/sudo_local 2>/dev/null; then
+  logk
+else
+  PAM_FILE="/etc/pam.d/sudo"
+  FIRST_LINE="# sudo: auth account password session"
+  TOUCHID_LINE="auth       sufficient     pam_tid.so"
+  sudo sed -i.bak -e "s/$FIRST_LINE/$FIRST_LINE\n$TOUCHID_LINE/" "$PAM_FILE"
+  sudo rm "$PAM_FILE.bak"
+  logk
 fi
-
-# Set up Node.js and npm
-if command -v n &>/dev/null; then
-  n stable
-  echo "Node.js and npm installed."
-fi
-
-# Clone dotfiles repository
-if [ ! -d "$DOTFILES_DIR" ]; then
-  if ! git clone $DOTFILES_REPO "$DOTFILES_DIR"; then
-    echo "Error: Failed to clone dotfiles repository."
-    exit 1
-  fi
-fi
-
-# Create backup directory
-BACKUP_DIR="$HOME/.files_backup"
-mkdir -p "$BACKUP_DIR"
-
-# Create symlinks for dotfiles
-for item in "$DOTFILES_DIR"/.*; do
-  target="$HOME/$(basename "$item")"
-
-  # Skip special files
-  if [[ "$item" == "$DOTFILES_DIR/." || "$item" == "$DOTFILES_DIR/.." || "$item" == "$DOTFILES_DIR/.git" ]]; then
-    continue
-  fi
-
-  # If target exists and is not a symlink, back it up
-  if [ -e "$target" ] && [ ! -L "$target" ]; then
-    mv "$target" "$BACKUP_DIR"
-    echo "Backed up $target to $BACKUP_DIR"
-  fi
-
-  # Create symlink
-  ln -sf "$item" "$target"
-  echo "Linked $(basename "$item")"
-done
-
-# Install iTerm2 profile
-if [ ! -f HTB.terminal ]; then
-  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide-htb.terminal" -o HTB.terminal
-fi
-open HTB.terminal
-defaults write com.apple.Terminal "Default Window Settings" "HTB"
-defaults write com.apple.Terminal "Startup Window Settings" "HTB"
 
 # Post-Install Verification
 if ! command -v brew &>/dev/null; then
@@ -148,6 +122,15 @@ if ! command -v brew &>/dev/null; then
   exit 1
 fi
 if ! command -v fish &>/dev/null; then
+  echo "Error: Fish shell installation failed."
+  exit 1
+fi
+
+# Cleanup Temporary Files
+echo "Cleaning up..."
+rm -rf "$DOTFILES_DIR/tmp"
+
+echo "Bootstrap and installation complete. Restart your terminal!"
   echo "Error: Fish shell installation failed."
   exit 1
 fi
