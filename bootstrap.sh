@@ -138,6 +138,11 @@ install_tools() {
     install_package --cask visual-studio-code &
     wait
     log "Tools installed successfully."
+
+    log "Running terminal setup script..."
+    bash ./iTerm2-setup.fish & wait
+    log "Terminal setup completed."
+}
 }
 
 # macOS Configuration
