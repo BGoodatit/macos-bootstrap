@@ -1,140 +1,102 @@
 #!/usr/bin/env bash
-# Author  : Combined by [Your Name]
-# License : GPLv3
+# Enhanced Bootstrap Script with Git and Brewfile Setup
+# Author: Brice Goodwin
+# Date: YYYY-MM-DD
+# Version: 1.0
 
-set -ueo pipefail
+# Set strict error handling
+set -euo pipefail
 
-# Configurable Parameters
-HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
-DOTFILES_REPO="https://github.com/BGoodatit/dotfiles.git"
-DOTFILES_DIR="$HOME/.files"
-LOG_FILE="bootstrap.log"
+# Environment Variables
+export STRAP_GIT_EMAIL='BriceGoodwin0313@icloud.com'
+export STRAP_GITHUB_USER='BGoodatit'
+export STRAP_GITHUB_TOKEN='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'
+export HOMEBREW_BREWFILE_URL="https://github.com/$STRAP_GITHUB_USER/homebrew-brewfile"
+STRAP_ISSUES_URL='https://github.com/MikeMcQuaid/strap/issues/new'
 
-# Function for installing packages with error handling
-install_package() {
-  local package_name="$1"
-  if ! brew install "$package_name"; then
-    echo "Error installing $package_name. Please check your Homebrew setup." >&2
-    exit 1
-  fi
+# Utility Functions
+log() {
+    echo "--> $*"
 }
 
-# Set up logging
-exec > >(tee -i "$LOG_FILE")
-exec 2>&1
+abort() {
+    echo "!!! $*" >&2
+    exit 1
+}
+
+# Function to set up Git
+setup_git() {
+    log "Configuring Git..."
+    git config --global user.name "$STRAP_GITHUB_USER"
+    git config --global user.email "$STRAP_GIT_EMAIL"
+    git config --global github.user "$STRAP_GITHUB_USER"
+    git config --global push.default simple
+
+    if [ -n "$STRAP_GITHUB_TOKEN" ]; then
+        printf 'protocol=https\nhost=github.com\nusername=%s\npassword=%s\n' \
+            "$STRAP_GITHUB_USER" "$STRAP_GITHUB_TOKEN" |
+            git credential approve
+    fi
+    log "Git configured successfully."
+}
+
+# Function to set up and install Brewfile dependencies
+setup_brewfile() {
+    log "Setting up Homebrew Brewfile..."
+    if git ls-remote "$HOMEBREW_BREWFILE_URL" &>/dev/null; then
+        [ ! -d "$HOME/.homebrew-brewfile" ] && git clone "$HOMEBREW_BREWFILE_URL" "$HOME/.homebrew-brewfile"
+        (cd "$HOME/.homebrew-brewfile" && git pull)
+        ln -sf "$HOME/.homebrew-brewfile/Brewfile" "$HOME/.Brewfile"
+        brew bundle --global || abort "Brewfile dependency installation failed."
+        log "Brewfile dependencies installed successfully."
+    else
+        abort "Brewfile repository not found or inaccessible."
+    fi
+}
+
+# Function to install necessary tools
+install_tools() {
+    log "Installing essential tools..."
+    brew install rbenv pyenv n yarn git wget python zsh fish
+    brew install --cask visual-studio-code
+    log "Tools installed successfully."
+}
+
+# Function to configure macOS settings
+configure_macos() {
+    log "Configuring macOS security and preferences..."
+    sudo defaults write com.apple.screensaver askForPassword -int 1
+    sudo defaults write com.apple.screensaver askForPasswordDelay -int 0
+    sudo defaults write /Library/Preferences/com.apple.alf globalstate -int 1
+    sudo launchctl load /System/Library/LaunchDaemons/com.apple.alf.agent.plist
+    log "macOS configuration complete."
+}
+
+# Function to install Homebrew
+install_homebrew() {
+    if ! command -v brew &>/dev/null; then
+        log "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        log "Homebrew is already installed."
+    fi
+}
 
 # Check Internet Connectivity
-if ! ping -c 1 google.com &>/dev/null; then
-  echo "Error: No internet connection. Please connect to the internet and retry."
-  exit 1
-fi
+check_internet() {
+    log "Checking internet connectivity..."
+    ping -c 1 google.com &>/dev/null || abort "No internet connection. Please connect and retry."
+    log "Internet connection verified."
+}
 
-# Confirm Script Execution
-read -p "This script will configure your macOS setup. Proceed? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "Aborted."
-  exit 0
-fi
+# Main Script Execution
+log "Starting Bootstrap Script..."
+check_internet
+install_homebrew
+setup_git
+setup_brewfile
+install_tools
+configure_macos
 
-# Install Rosetta (Apple Silicon only)
-if [[ "$(uname -m)" == "arm64" ]] && ! /usr/libexec/rosetta --help &>/dev/null; then
-  echo "Installing Rosetta..."
-  sudo softwareupdate --install-rosetta --agree-to-license
-fi
-
-# Install Xcode Command Line Tools
-if ! xcode-select -p &>/dev/null; then
-  echo "Installing Xcode Command Line Tools..."
-  sudo xcode-select --install
-  until xcode-select -p &>/dev/null; do
-    sleep 5
-  done
-else
-  echo "Xcode Command Line Tools already installed."
-fi
-
-# Install Homebrew
-if ! command -v brew &>/dev/null; then
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL $HOMEBREW_INSTALL_URL)"
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-else
-  echo "Homebrew already installed."
-fi
-
-# Configure Homebrew
-brew analytics off
-brew update
-brew upgrade
-brew autoupdate start 43200
-
-# Install essential tools in parallel
-install_package rbenv &
-install_package pyenv &
-install_package n &
-install_package yarn &
-install_package git &
-install_package wget &
-install_package python &
-install_package zsh &
-install_package fish &
-install_package --cask visual-studio-code &
-wait
-
-# Add security configurations
-log "Configuring macOS security settings:"
-sudo defaults write com.apple.screensaver askForPassword -int 1
-sudo defaults write com.apple.screensaver askForPasswordDelay -int 0
-sudo defaults write /Library/Preferences/com.apple.alf globalstate -int 1
-sudo launchctl load /System/Library/LaunchDaemons/com.apple.alf.agent.plist 2>/dev/null
-logk
-
-# Check and enable full-disk encryption
-log "Checking FileVault status:"
-if fdesetup status | grep -E "FileVault is (On|Off, but will be enabled after the next restart)."; then
-  logk
-else
-  echo "FileVault not enabled. Enabling it now."
-  sudo fdesetup enable -user "$USER" | tee "$HOME/Desktop/FileVault_Recovery_Key.txt"
-  logk
-fi
-
-# Prevent sleep during execution
-caffeinate -s -w $$ &
-
-# TouchID setup for sudo
-log "Configuring TouchID for sudo authentication:"
-if grep -q pam_tid /etc/pam.d/sudo /etc/pam.d/sudo_local 2>/dev/null; then
-  logk
-else
-  PAM_FILE="/etc/pam.d/sudo"
-  FIRST_LINE="# sudo: auth account password session"
-  TOUCHID_LINE="auth       sufficient     pam_tid.so"
-  sudo sed -i.bak -e "s/$FIRST_LINE/$FIRST_LINE\n$TOUCHID_LINE/" "$PAM_FILE"
-  sudo rm "$PAM_FILE.bak"
-  logk
-fi
-
-# Post-Install Verification
-if ! command -v brew &>/dev/null; then
-  echo "Error: Homebrew installation failed."
-  exit 1
-fi
-if ! command -v fish &>/dev/null; then
-  echo "Error: Fish shell installation failed."
-  exit 1
-fi
-
-# Cleanup Temporary Files
-echo "Cleaning up..."
-rm -rf "$DOTFILES_DIR/tmp"
-
-echo "Bootstrap and installation complete. Restart your terminal!"
-
-# Cleanup Temporary Files
-echo "Cleaning up..."
-rm -rf "$DOTFILES_DIR/tmp"
-
-echo "Bootstrap and installation complete. Restart your terminal!"
-echo "Bootstrap and installation complete. Restart your terminal!"
+log "Bootstrap Script completed successfully. Restart your terminal!"
