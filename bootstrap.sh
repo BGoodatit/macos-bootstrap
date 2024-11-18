@@ -1,130 +1,204 @@
 #!/usr/bin/env bash
-# Author  : Chad Mayfield (chad@chadmayfield.com)
-# License : GPLv3
+# Enhanced Bootstrap Script with Git, Brewfile Setup, and macOS Configuration
+# Author: Brice Goodwin
+# Date: YYYY-MM-DD
+# Version: 1.0
 
-# setup macOS using Homebrew
+set -euo pipefail
 
-# install rosetta on apple silicon
-if [[ "$(sysctl -n machdep.cpu.brand_string)" == *'Apple'* ]]; then
-  if [ ! -d "/usr/libexec/rosetta" ]; then
-    echo "Installing Rosetta..."
-    sudo softwareupdate --install-rosetta --agree-to-license
-  fi
-  # show our install history, we should have rosetta
-  sudo softwareupdate --history
-fi
+# Configurable Parameters
+STRAP_GIT_EMAIL='BriceGoodwin0313@icloud.com'
+STRAP_GITHUB_USER='BGoodatit'
+STRAP_GITHUB_TOKEN='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'
+HOMEBREW_BREWFILE_URL="https://github.com/$STRAP_GITHUB_USER/homebrew-brewfile"
+HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+DOTFILES_REPO="https://github.com/$STRAP_GITHUB_USER/dotfiles.git"
+DOTFILES_DIR="$HOME/.files"
+LOG_FILE="bootstrap.log"
 
-# install xcode cli tools
-command -v "xcode-select -p" >/dev/null 2>&1
-has_xcode=1 || { has_xcode=0; }
-if [ "$has_xcode" -eq 0 ]; then
-  echo "Installing XCode CLI Tools..."
-  sudo xcode-select --install
-else
-  # show path
-  xcode-select -p
-  # show version
-  xcode-select --version
-  # show compiler version
-  #gcc -v
-  #llvm-gcc -v
-  #clang -v
-fi
+# Utility Functions
+log() {
+    echo "--> $*"
+}
 
-# install homebrew
-command -v brew >/dev/null 2>&1
-has_brew=1 || { has_brew=0; }
-if [ "$has_brew" -eq 0 ]; then
-  echo "Installing Homebrew..."
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+abort() {
+    echo "!!! $*" >&2
+    exit 1
+}
 
-  # add 'brew --prefix' location to $PATH
-  # https://applehelpwriter.com/2018/03/21/how-homebrew-invites-users-to-get-pwned/
-  # https://www.n00py.io/2016/10/privilege-escalation-on-os-x-without-exploits/
-  if [[ "$(sysctl -n machdep.cpu.brand_string)" == *'Apple'* ]]; then
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>/Users/${USER}/.zprofile
-    echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >>/Users/${USER}/.bash_profile
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  else
-    echo 'export PATH="/usr/local/sbin:$PATH"' >>/Users/${USER}/.bash_profile
-  fi
+install_package() {
+    local package_name="$1"
+    if ! brew install "$package_name"; then
+        echo "Error installing $package_name. Please check your Homebrew setup." >&2
+        exit 1
+    fi
+}
 
-  source /Users/${USER}/.bash_profile
+# Check Internet Connectivity
+check_internet() {
+    log "Checking internet connectivity..."
+    if ! ping -c 1 google.com &>/dev/null; then
+        abort "No internet connection. Please connect and retry."
+    fi
+}
 
-brew analytics off
-brew update
-brew upgrade
+# Confirm Script Execution
+confirm_execution() {
+    read -p "This script will configure your macOS setup. Proceed? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log "Aborted."
+        exit 0
+    fi
+}
 
-# Install and configure rbenv and Ruby
-brew install rbenv
-echo 'if command -v rbenv &>/dev/null; then eval "$(rbenv init -)"; fi' >>~/.bash_profile
-echo 'if command -v rbenv &>/dev/null; then eval "$(rbenv init -)"; fi' >>~/.zprofile
-echo 'status is-login; and source (rbenv init -|psub)' >>~/.config/fish/config.fish
+# Install Rosetta (Apple Silicon only)
+install_rosetta() {
+    if [[ "$(uname -m)" == "arm64" ]] && ! /usr/libexec/rosetta --help &>/dev/null; then
+        log "Installing Rosetta..."
+        sudo softwareupdate --install-rosetta --agree-to-license
+    fi
+}
 
-latest_ruby=$(rbenv install -l | grep -v - | tail -1)
-rbenv install $latest_ruby && rbenv global $latest_ruby
-echo "Ruby $latest_ruby installed."
+# Install Xcode Command Line Tools
+install_xcode_tools() {
+    if ! xcode-select -p &>/dev/null; then
+        log "Installing Xcode Command Line Tools..."
+        sudo xcode-select --install
+        until xcode-select -p &>/dev/null; do
+            sleep 5
+        done
+    else
+        log "Xcode Command Line Tools already installed."
+    fi
+}
 
-# Install and configure pyenv and Python
-brew install pyenv
-echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init --path)"; fi' >>~/.zprofile
-echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init -)"; fi' >>~/.bash_profile
-echo 'if command -v pyenv &>/dev/null; then eval "$(pyenv init --path)"; fi' >>~/.bashrc
-echo 'status is-login; and source (pyenv init -|psub)' >>~/.config/fish/config.fish
+# Install Homebrew
+install_homebrew() {
+    if ! command -v brew &>/dev/null; then
+        log "Installing Homebrew..."
+        /bin/bash -c "$(curl -fsSL $HOMEBREW_INSTALL_URL)"
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    else
+        log "Homebrew already installed."
+    fi
+}
 
-latest_python=$(pyenv install -l | grep -v - | grep -v b | tail -1)
-pyenv install $latest_python && pyenv global $latest_python
-echo "Python $latest_python installed."
+# Configure Homebrew
+configure_homebrew() {
+    log "Configuring Homebrew..."
+    brew analytics off
+    brew update
+    brew upgrade
+    brew autoupdate start 43200
+}
 
-# Install Node.js and npm using n
-brew install n
-n stable
+# Git Configuration
+setup_git() {
+    log "Configuring Git..."
+    git config --global user.name "$STRAP_GITHUB_USER"
+    git config --global user.email "$STRAP_GIT_EMAIL"
+    git config --global github.user "$STRAP_GITHUB_USER"
+    git config --global push.default simple
 
-# Install Yarn
-brew install yarn
+    if [ -n "$STRAP_GITHUB_TOKEN" ]; then
+        printf 'protocol=https\nhost=github.com\nusername=%s\npassword=%s\n' \
+            "$STRAP_GITHUB_USER" "$STRAP_GITHUB_TOKEN" |
+            git credential approve
+    fi
+    log "Git configured successfully."
+}
 
-# Set Homebrew to update automatically every 12 hours
-brew autoupdate start 43200
+# Brewfile Setup
+setup_brewfile() {
+    log "Setting up Homebrew Brewfile..."
+    if git ls-remote "$HOMEBREW_BREWFILE_URL" &>/dev/null; then
+        [ ! -d "$HOME/.homebrew-brewfile" ] && git clone "$HOMEBREW_BREWFILE_URL" "$HOME/.homebrew-brewfile"
+        (cd "$HOME/.homebrew-brewfile" && git pull)
+        ln -sf "$HOME/.homebrew-brewfile/Brewfile" "$HOME/.Brewfile"
+        brew bundle --global || abort "Brewfile dependency installation failed."
+        log "Brewfile dependencies installed successfully."
+    else
+        abort "Brewfile repository not found or inaccessible."
+    fi
+}
 
-# Refresh shell environments
-source ~/.zshrc
-source ~/.bashrc
-source ~/.config/fish/config.fish
+# Install Essential Tools
+install_tools() {
+    log "Installing essential tools..."
+    install_package rbenv &
+    install_package pyenv &
+    install_package n &
+    install_package yarn &
+    install_package git &
+    install_package wget &
+    install_package python &
+    install_package zsh &
+    install_package fish &
+    install_package --cask visual-studio-code &
+    wait
+    log "Tools installed successfully."
 
-echo "Installation complete. Please restart your terminal."
+    log "Running terminal setup script..."
+    bash ./iTerm2-setup.fish & wait
+    log "Terminal setup completed."
+}
+}
 
+# macOS Configuration
+configure_macos() {
+    log "Configuring macOS security settings..."
+    sudo defaults write com.apple.screensaver askForPassword -int 1
+    sudo defaults write com.apple.screensaver askForPasswordDelay -int 0
+    sudo defaults write /Library/Preferences/com.apple.alf globalstate -int 1
+    sudo launchctl load /System/Library/LaunchDaemons/com.apple.alf.agent.plist 2>/dev/null
 
-#EOF
+    # Enable FileVault
+    log "Checking FileVault status..."
+    if ! fdesetup status | grep -q "FileVault is On"; then
+        log "Enabling FileVault..."
+        sudo fdesetup enable -user "$USER" | tee "$HOME/Desktop/FileVault_Recovery_Key.txt"
+    fi
 
-# Install essential packages
-brew install git
-brew install wget
-brew install node
-brew install python
-brew install zsh
-brew install fish
+    # Configure TouchID for sudo
+    log "Configuring TouchID for sudo authentication..."
+    if ! grep -q pam_tid /etc/pam.d/sudo 2>/dev/null; then
+        sudo sed -i.bak '1 a\auth       sufficient     pam_tid.so' /etc/pam.d/sudo
+    fi
+}
 
-# Set up Oh My Zsh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+# Cleanup
+cleanup() {
+    log "Cleaning up temporary files..."
+    rm -rf "$DOTFILES_DIR/tmp"
+}
 
-# Set up Fish shell
-bash iTerm-fish.sh
+# Post-Install Verification
+verify_installations() {
+    log "Verifying installations..."
+    command -v brew &>/dev/null || abort "Homebrew installation failed."
+    command -v fish &>/dev/null || abort "Fish shell installation failed."
+}
 
-# Install VS Code
-# Install HTB.terminal profile and set it as default
-echo "Installing HTB.terminal profile..."
-if [ ! -f HTB.terminal ]; then
-  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/dotfiles/main/Riptide-htb.terminal" -o HTB.terminal
-fi
-open HTB.terminal
-defaults write com.apple.Terminal "Default Window Settings" "HTB"
-defaults write com.apple.Terminal "Startup Window Settings" "HTB"
+# Main Script Execution
+main() {
+    exec > >(tee -i "$LOG_FILE")
+    exec 2>&1
 
-brew install --cask visual-studio-code
+    check_internet
+    confirm_execution
+    install_rosetta
+    install_xcode_tools
+    install_homebrew
+    configure_homebrew
+    setup_git
+    setup_brewfile
+    install_tools
+    configure_macos
+    verify_installations
+    cleanup
 
-# Clone your dotfiles and set them up
-git clone https://github.com/BGoodatit/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-./install.sh
+    log "Bootstrap and installation complete. Restart your terminal!"
+}
 
-echo "Bootstrap complete!"
+main
