@@ -143,7 +143,6 @@ install_tools() {
     bash ./iTerm2-setup.fish & wait
     log "Terminal setup completed."
 }
-}
 
 # macOS Configuration
 configure_macos() {
