@@ -30,19 +30,152 @@ end
 if not test -f ~/iTerm2Beta.json
     echo "Creating iTerm2 configuration file..."
     set iterm_config ~/iTerm2Beta.json
-    echo "{
-        \"Working Directory\": \"~/\",
-        \"Color Scheme\": \"Riptide\",
-        \"Font\": \"HackNFP-Regular 13\",
-        \"Non-ASCII Font\": \"MesloLGS-NF-Regular 13\",
-        \"Cursor\": {
-            \"Color\": \"#FFFFFF\",
-            \"TextColor\": \"#000000\"
+    echo '{
+        "Close Sessions On End": true,
+        "Ansi 15 Color (Dark)": {
+            "Red Component": 0.99999600648880005,
+            "Color Space": "sRGB",
+            "Blue Component": 1,
+            "Alpha Component": 1,
+            "Green Component": 1
         },
-        \"Powerline\": true,
-        \"Mouse Reporting\": true,
-        \"Ligatures\": true
-    }" > $iterm_config
+        "Non-ASCII Anti Aliased": true,
+        "Cursor Text Color": {
+            "Red Component": 0.99999600648880005,
+            "Color Space": "sRGB",
+            "Blue Component": 1,
+            "Alpha Component": 1,
+            "Green Component": 1
+        },
+        "Smart Cursor Color": true,
+        "Prompt Before Closing 2": false,
+        "Ansi 3 Color (Dark)": {
+            "Red Component": 1,
+            "Color Space": "sRGB",
+            "Blue Component": 0,
+            "Alpha Component": 1,
+            "Green Component": 0.68627452850341797
+        },
+        "Ansi 12 Color (Dark)": {
+            "Red Component": 0.36078432202339172,
+            "Color Space": "sRGB",
+            "Blue Component": 1,
+            "Alpha Component": 1,
+            "Green Component": 0.69803923368453979
+        },
+        "Mouse Reporting": true,
+        "Use Underline Color (Light)": false,
+        "Disable Window Resizing": true,
+        "BM Growl": true,
+        "Background Color (Dark)": {
+            "Red Component": 0.10196078568696976,
+            "Color Space": "sRGB",
+            "Blue Component": 0.19607843458652496,
+            "Alpha Component": 1,
+            "Green Component": 0.13725490868091583
+        },
+        "Guid": "4363E596-A47F-47BE-A509-4BEE981F7A57",
+        "Cursor Color (Dark)": {
+            "Red Component": 0.19215686619281769,
+            "Color Space": "sRGB",
+            "Blue Component": 0.3333333432674408,
+            "Alpha Component": 1,
+            "Green Component": 0.24705882370471954
+        },
+        "Initial Text": "",
+        "Selection Color (Dark)": {
+            "Red Component": 0.19215686619281769,
+            "Color Space": "sRGB",
+            "Blue Component": 0.3333333432674408,
+            "Alpha Component": 1,
+            "Green Component": 0.24705882370471954
+        },
+        "Scrollback Lines": 1000,
+        "Badge Color (Dark)": {
+            "Red Component": 1,
+            "Color Space": "sRGB",
+            "Blue Component": 0,
+            "Alpha Component": 0.5,
+            "Green Component": 0.1491314172744751
+        },
+        "Open Password Manager Automatically": true,
+        "Faint Text Alpha": 0.5,
+        "Ansi 0 Color (Dark)": {
+            "Red Component": 0,
+            "Color Space": "sRGB",
+            "Blue Component": 0,
+            "Alpha Component": 1,
+            "Green Component": 0
+        },
+        "Transparency": 0,
+        "Use Bright Bold": true,
+        "Horizontal Spacing": 1,
+        "Ansi 13 Color (Light)": {
+            "Red Component": 0.75686275959014893,
+            "Color Space": "sRGB",
+            "Blue Component": 0.98039215803146362,
+            "Alpha Component": 1,
+            "Green Component": 0.42352941632270813
+        },
+        "Blur": false,
+        "Ansi 13 Color": {
+            "Red Component": 0.75686275959014893,
+            "Color Space": "sRGB",
+            "Blue Component": 0.98039215803146362,
+            "Alpha Component": 1,
+            "Green Component": 0.42352941632270813
+        },
+        "Ansi 2 Color (Dark)": {
+            "Red Component": 0.62352943420410156,
+            "Color Space": "sRGB",
+            "Blue Component": 0,
+            "Alpha Component": 1,
+            "Green Component": 0.93725490570068359
+        },
+        "Cursor Color": {
+            "Red Component": 0.74117647058823533,
+            "Color Space": "P3",
+            "Blue Component": 0,
+            "Alpha Component": 1,
+            "Green Component": 1
+        },
+        "Use Cursor Guide (Light)": false,
+        "Option Key Sends": 0,
+        "Idle Code": 0,
+        "Ansi 13 Color (Dark)": {
+            "Red Component": 0.75686275959014893,
+            "Color Space": "sRGB",
+            "Blue Component": 0.98039215803146362,
+            "Alpha Component": 1,
+            "Green Component": 0.42352941632270813
+        },
+        "Send Code When Idle": false,
+        "Selection Color": {
+            "Red Component": 0.19215686619281769,
+            "Color Space": "sRGB",
+            "Blue Component": 0.3333333432674408,
+            "Alpha Component": 1,
+            "Green Component": 0.24705882370471954
+        },
+        "Non-ASCII Ligatures": true,
+        "Terminal Type": "xterm-256color",
+        "Cursor Boost (Dark)": 0,
+        "Right Option Key Sends": 0,
+        "Background Color": {
+            "Red Component": 0.10196078568696976,
+            "Color Space": "sRGB",
+            "Blue Component": 0.19607843458652496,
+            "Alpha Component": 1,
+            "Green Component": 0.13725490868091583
+        },
+        "Ansi 10 Color (Dark)": {
+            "Red Component": 0.77254903316497803,
+            "Color Space": "sRGB",
+            "Blue Component": 0.40392157435417175,
+            "Alpha Component": 1,
+            "Green Component": 0.95686274766921997
+        }
+    }' > $iterm_config
     echo "Importing iTerm2 configuration..."
     defaults import com.googlecode.iterm2 $iterm_config
 else
