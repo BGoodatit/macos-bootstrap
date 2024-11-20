@@ -78,53 +78,6 @@ brew install zsh &
 brew install bash &
 brew install fish &
 brew install --cask visual-studio-code &
-wait
-if [ -n "$STRAP_GITHUB_USER" ] && { [ ! -f "$HOME/.Brewfile" ] || [ "$HOME/.Brewfile" -ef "$HOME/.homebrew-brewfile/Brewfile" ]; }; then
-  HOMEBREW_BREWFILE_URL="https://github.com/$STRAP_GITHUB_USER/homebrew-brewfile"
-
-  if git ls-remote "$HOMEBREW_BREWFILE_URL" &>/dev/null; then
-    log "Fetching $STRAP_GITHUB_USER/homebrew-brewfile from GitHub:"
-    if [ ! -d "$HOME/.homebrew-brewfile" ]; then
-      log "Cloning to ~/.homebrew-brewfile:"
-      git clone $Q "$HOMEBREW_BREWFILE_URL" ~/.homebrew-brewfile
-      logk
-    else
-      (
-        cd ~/.homebrew-brewfile
-        git pull $Q
-      )
-    fi
-    ln -sf ~/.homebrew-brewfile/Brewfile ~/.Brewfile
-    logk
-  fi
-fi
-
-# Install from local Brewfile
-if [ -f "$HOME/.Brewfile" ]; then
-  log "Installing from user Brewfile on GitHub:"
-  brew bundle check --global &>/dev/null || brew bundle --global
-  logk
-fi
-
-# Basic System Info and Homebrew Status
-hb = `#{brew_prefix}/bin/brew -v`
-bv = `bash -c 'echo $BASH_VERSION'`
-sh = `echo $SHELL`
-now = DateTime.now.strftime("%B %d %Y")
-au = ENV.fetch("HOMEBREW_AUTO_UPDATE_COMMAND", "true")
-status = au != "false" ? "True" : "true"
-abort("ERROR: Homebrew does not appear to be installed!") unless hb.include? "Homebrew"
-puts("--------------------------------")
-puts("HOMEBREW_PRODUCT    : " + ENV.fetch("HOMEBREW_PRODUCT", "Unknown"))
-puts("HOMEBREW_SYSTEM     : " + ENV.fetch("HOMEBREW_SYSTEM", "Unknown"))
-puts("HOMEBREW_OS_VERSION : " + ENV.fetch("HOMEBREW_OS_VERSION", "Unknown"))
-puts("HOMEBREW_VERSION    : " + ENV.fetch("HOMEBREW_VERSION", "Unknown"))
-puts("HOMEBREW_PROCESSOR  : " + ENV.fetch("HOMEBREW_PROCESSOR", "Unknown"))
-puts("AUTO_UPDATE_ENABLED : " + status + " (" + au + ")")
-puts("BASH_VERSION        : " + bv)
-puts("CURRENT_USER_SHELL  : " + sh)
-puts("--------------------------------")
-puts("\n")
 
 # Set up Oh My Zsh
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -218,6 +171,54 @@ for item in "$DOTFILES_DIR"/.*; do
   ln -sf "$item" "$HOME/$(basename "$item")"
   echo "Linked $(basename "$item")"
 done
+
+wait
+if [ -n "$STRAP_GITHUB_USER" ] && { [ ! -f "$HOME/.Brewfile" ] || [ "$HOME/.Brewfile" -ef "$HOME/.homebrew-brewfile/Brewfile" ]; }; then
+  HOMEBREW_BREWFILE_URL="https://github.com/$STRAP_GITHUB_USER/homebrew-brewfile"
+
+  if git ls-remote "$HOMEBREW_BREWFILE_URL" &>/dev/null; then
+    log "Fetching $STRAP_GITHUB_USER/homebrew-brewfile from GitHub:"
+    if [ ! -d "$HOME/.homebrew-brewfile" ]; then
+      log "Cloning to ~/.homebrew-brewfile:"
+      git clone $Q "$HOMEBREW_BREWFILE_URL" ~/.homebrew-brewfile
+      logk
+    else
+      (
+        cd ~/.homebrew-brewfile
+        git pull $Q
+      )
+    fi
+    ln -sf ~/.homebrew-brewfile/Brewfile ~/.Brewfile
+    logk
+  fi
+fi
+
+# Install from local Brewfile
+if [ -f "$HOME/.Brewfile" ]; then
+  log "Installing from user Brewfile on GitHub:"
+  brew bundle check --global &>/dev/null || brew bundle --global
+  logk
+fi
+
+# Basic System Info and Homebrew Status
+hb = `#{brew_prefix}/bin/brew -v`
+bv = `bash -c 'echo $BASH_VERSION'`
+sh = `echo $SHELL`
+now = DateTime.now.strftime("%B %d %Y")
+au = ENV.fetch("HOMEBREW_AUTO_UPDATE_COMMAND", "true")
+status = au != "false" ? "True" : "true"
+abort("ERROR: Homebrew does not appear to be installed!") unless hb.include? "Homebrew"
+puts("--------------------------------")
+puts("HOMEBREW_PRODUCT    : " + ENV.fetch("HOMEBREW_PRODUCT", "Unknown"))
+puts("HOMEBREW_SYSTEM     : " + ENV.fetch("HOMEBREW_SYSTEM", "Unknown"))
+puts("HOMEBREW_OS_VERSION : " + ENV.fetch("HOMEBREW_OS_VERSION", "Unknown"))
+puts("HOMEBREW_VERSION    : " + ENV.fetch("HOMEBREW_VERSION", "Unknown"))
+puts("HOMEBREW_PROCESSOR  : " + ENV.fetch("HOMEBREW_PROCESSOR", "Unknown"))
+puts("AUTO_UPDATE_ENABLED : " + status + " (" + au + ")")
+puts("BASH_VERSION        : " + bv)
+puts("CURRENT_USER_SHELL  : " + sh)
+puts("--------------------------------")
+puts("\n")
 
 # Install Terminal profile
 if [ ! -f HTB.terminal ]; then
