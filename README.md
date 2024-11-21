@@ -5,7 +5,7 @@ This repository contains a script to bootstrap a macOS Apple Silicon system.
 ## How to Use
 
 Single command installation:
-    ```bash 
+    ``` 
     git clone https://github.com/BGoodatit/macos-bootstrap.git
     cd macos-bootstrap
     chmod +x bootstrap.sh
