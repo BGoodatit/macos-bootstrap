@@ -166,12 +166,13 @@ else
 fi
 
 # Run Fish iTerm2 Setup Script
-if [ -f "$DOTFILES_DIR/iTerm2-setup.fish" ]; then
-  log "Running Fish iTerm2 setup script..."
-  fish "$DOTFILES_DIR/iTerm2-setup.fish" || log "Failed to run Fish iTerm2 setup script."
+if [ -f "$HOME/macos-bootstrap/iTerm2-setup.fish" ]; then
+  log "Running Fish iTerm2 setup script from macos-bootstrap..."
+  fish "$HOME/macos-bootstrap/iTerm2-setup.fish" || log "Failed to run Fish iTerm2 setup script."
 else
-  log "Fish iTerm2 setup script not found. Skipping."
+  log "Fish iTerm2 setup script not found in macos-bootstrap. Skipping."
 fi
+
 
 # Finish Setup
 log "Bootstrap and installation complete. Restart your terminal!"
