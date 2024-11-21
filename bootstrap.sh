@@ -107,11 +107,41 @@ log "Creating symlinks for dotfiles..."
 EXCLUDE=("install.sh" ".git" ".gitignore" ".gitattributes")
 for file in "$DOTFILES_DIR"/.* "$DOTFILES_DIR"/*; do
   filename=$(basename "$file")
+
+  # Skip excluded files and directories
   if [[ " ${EXCLUDE[*]} " =~ " $filename " || "$filename" == "." || "$filename" == ".." ]]; then
     continue
   fi
-  ln -sf "$file" "$HOME/$filename"
-  log "Linked $filename to $HOME/$filename."
+
+  # Special handling for .config directory
+  if [ "$filename" == ".config" ]; then
+    log "Handling .config directory..."
+    mkdir -p "$HOME/.config" # Ensure .config exists
+    for config_file in "$file"/*; do
+      config_filename=$(basename "$config_file")
+      config_target="$HOME/.config/$config_filename"
+
+      # Remove existing files/directories inside .config to replace with symlinks
+      if [ -e "$config_target" ] || [ -L "$config_target" ]; then
+        log "Removing existing $config_target to replace with symlink..."
+        rm -rf "$config_target"
+      fi
+
+      ln -sf "$config_file" "$config_target"
+      log "Linked $config_filename to $config_target."
+    done
+    continue
+  fi
+
+  # Handle regular files and directories
+  target="$HOME/$filename"
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    log "Removing existing $target to replace with symlink..."
+    rm -rf "$target"
+  fi
+
+  ln -sf "$file" "$target"
+  log "Linked $filename to $target."
 done
 
 # Set up Brewfile
@@ -133,6 +163,14 @@ if [ -f "$HOME/.Brewfile" ]; then
   brew bundle --global || log "Brewfile installation skipped or failed."
 else
   log "No Brewfile found. Skipping dependency installation."
+fi
+
+# Run Fish iTerm2 Setup Script
+if [ -f "$DOTFILES_DIR/iTerm2-setup.fish" ]; then
+  log "Running Fish iTerm2 setup script..."
+  fish "$DOTFILES_DIR/iTerm2-setup.fish" || log "Failed to run Fish iTerm2 setup script."
+else
+  log "Fish iTerm2 setup script not found. Skipping."
 fi
 
 # Finish Setup
