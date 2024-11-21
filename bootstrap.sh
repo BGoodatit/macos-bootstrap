@@ -5,9 +5,9 @@
 set -ueo pipefail
 
 # Configurable Parameters
-STRAP_GIT_EMAIL='BriceGoodwin0313@icloud.com'
-STRAP_GITHUB_USER='BGoodatit'
-STRAP_GITHUB_TOKEN='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'
+STRAP_GIT_EMAIL="BriceGoodwin0313@icloud.com"
+STRAP_GITHUB_USER="BGoodatit"
+STRAP_GITHUB_TOKEN="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"
 HOMEBREW_BREWFILE_URL="https://github.com/$STRAP_GITHUB_USER/homebrew-brewfile"
 HOMEBREW_INSTALL_URL="https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 DOTFILES_REPO="https://github.com/$STRAP_GITHUB_USER/dotfiles.git"
