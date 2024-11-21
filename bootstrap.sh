@@ -93,6 +93,52 @@ else
   log "Oh My Zsh already installed."
 fi
 
+# Git Configuration
+log "Configuring Git..."
+{
+  git config --global user.name "$STRAP_GITHUB_USER" || true
+  git config --global user.email "$STRAP_GIT_EMAIL" || true
+  git config --global github.user "$STRAP_GITHUB_USER" || true
+  git config --global push.default simple || true
+  printf 'protocol=https\nhost=github.com\nusername=%s\npassword=%s\n' \
+    "$STRAP_GITHUB_USER" "$STRAP_GITHUB_TOKEN" |
+    git credential approve || true
+}
+
+# Check and Enable FileVault
+log "Checking FileVault status..."
+if ! fdesetup status | grep -q "FileVault is On"; then
+  log "Enabling FileVault..."
+  sudo fdesetup enable -user "$USER" | tee "$HOME/Desktop/FileVault_Recovery_Key.txt" || log "FileVault setup skipped."
+else
+  log "FileVault is already enabled."
+fi
+
+# Set up rbenv and Ruby
+log "Setting up Ruby environment..."
+if command -v rbenv &>/dev/null; then
+  latest_ruby=$(rbenv install -l | grep -v - | tail -1)
+  rbenv install "$latest_ruby" && rbenv global "$latest_ruby" || log "Ruby setup skipped."
+else
+  log "rbenv not installed. Skipping Ruby setup."
+fi
+
+# Set up pyenv and Python
+log "Setting up Python environment..."
+if command -v pyenv &>/dev/null; then
+  latest_python=$(pyenv install -l | grep -v - | grep -v b | tail -1)
+  pyenv install "$latest_python" && pyenv global "$latest_python" || log "Python setup skipped."
+else
+  log "pyenv not installed. Skipping Python setup."
+fi
+
+# Set up Node.js
+log "Setting up Node.js environment..."
+if command -v n &>/dev/null; then
+  n stable || log "Node.js setup skipped."
+else
+  log "n not installed. Skipping Node.js setup."
+fi
 # Set up Dotfiles
 if [ ! -d "$DOTFILES_DIR" ]; then
   log "Cloning dotfiles repository..."
@@ -164,6 +210,15 @@ if [ -f "$HOME/.Brewfile" ]; then
 else
   log "No Brewfile found. Skipping dependency installation."
 fi
+
+# Terminal Profile
+log "Configuring Terminal Profile..."
+if [ ! -f HTB.terminal ]; then
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/macos-bootstrap/main/Riptide-htb.terminal" -o HTB.terminal || log "Failed to download HTB terminal profile."
+fi
+open HTB.terminal || log "Failed to open HTB terminal profile."
+defaults write com.apple.Terminal "Default Window Settings" "HTB" || log "Failed to set default terminal profile."
+defaults write com.apple.Terminal "Startup Window Settings" "HTB" || log "Failed to set startup terminal profile."
 
 # Run Fish iTerm2 Setup Script
 if [ -f "$HOME/macos-bootstrap/iTerm2-setup.fish" ]; then
