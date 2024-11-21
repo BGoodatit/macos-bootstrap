@@ -200,26 +200,6 @@ if [ -f "$HOME/.Brewfile" ]; then
   logk
 fi
 
-# Basic System Info and Homebrew Status
-hb = `#{brew_prefix}/bin/brew -v`
-bv = `bash -c 'echo $BASH_VERSION'`
-sh = `echo $SHELL`
-now = DateTime.now.strftime("%B %d %Y")
-au = ENV.fetch("HOMEBREW_AUTO_UPDATE_COMMAND", "true")
-status = au != "false" ? "True" : "true"
-abort("ERROR: Homebrew does not appear to be installed!") unless hb.include? "Homebrew"
-puts("--------------------------------")
-puts("HOMEBREW_PRODUCT    : " + ENV.fetch("HOMEBREW_PRODUCT", "Unknown"))
-puts("HOMEBREW_SYSTEM     : " + ENV.fetch("HOMEBREW_SYSTEM", "Unknown"))
-puts("HOMEBREW_OS_VERSION : " + ENV.fetch("HOMEBREW_OS_VERSION", "Unknown"))
-puts("HOMEBREW_VERSION    : " + ENV.fetch("HOMEBREW_VERSION", "Unknown"))
-puts("HOMEBREW_PROCESSOR  : " + ENV.fetch("HOMEBREW_PROCESSOR", "Unknown"))
-puts("AUTO_UPDATE_ENABLED : " + status + " (" + au + ")")
-puts("BASH_VERSION        : " + bv)
-puts("CURRENT_USER_SHELL  : " + sh)
-puts("--------------------------------")
-puts("\n")
-
 # Install Terminal profile
 if [ ! -f HTB.terminal ]; then
   curl --silent --location "https://raw.githubusercontent.com/BGoodatit/macos-bootstrap/refs/heads/main/Riptide-htb.terminal" -o HTB.terminal
