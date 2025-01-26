@@ -28,6 +28,14 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
   exit 0
 fi
 
+# Run defaults.sh for initial setup (Add this section)
+if [ -f "$(dirname "$0")/defaults.sh" ]; then
+  log "Running defaults.sh for initial configuration..."
+  source "$(dirname "$0")/defaults.sh" || log "Failed to source defaults.sh"
+else
+  log "defaults.sh not found!"
+fi
+
 # Check Internet Connectivity
 ping -c 1 google.com &>/dev/null || log "No internet connection. Continuing with offline tasks..."
 
@@ -139,6 +147,7 @@ if command -v n &>/dev/null; then
 else
   log "n not installed. Skipping Node.js setup."
 fi
+
 # Set up Dotfiles
 if [ ! -d "$DOTFILES_DIR" ]; then
   log "Cloning dotfiles repository..."
