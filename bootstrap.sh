@@ -58,13 +58,22 @@ else
   log "Xcode Command Line Tools already installed."
 fi
 
-# Install Homebrew
+# ──────────────────────────────────────────────────────────────────────────────
+# Ensure Homebrew is on PATH for both Intel and Apple Silicon
+if [ -d "/opt/homebrew/bin" ]; then
+  export PATH="/opt/homebrew/bin:$PATH"
+elif [ -d "/usr/local/bin" ]; then
+  export PATH="/usr/local/bin:$PATH"
+fi
+
+# Install Homebrew (if missing) and load it into the session
 if ! command -v brew &>/dev/null; then
   log "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || log "Homebrew installation skipped."
-  eval "$(/opt/homebrew/bin/brew shellenv)"
+  eval "$(brew shellenv)"
 else
   log "Homebrew already installed."
+  eval "$(brew shellenv)"
 fi
 
 # Configure Homebrew
@@ -223,7 +232,8 @@ fi
 # Terminal Profile
 log "Configuring Terminal Profile..."
 if [ ! -f HTB.terminal ]; then
-  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/macos-bootstrap/main/Riptide-htb.terminal" -o HTB.terminal || log "Failed to download HTB terminal profile."
+  curl --silent --location "https://raw.githubusercontent.com/BGoodatit/macos-bootstrap/main/Riptide-htb.terminal" \
+    -o HTB.terminal || log "Failed to download HTB terminal profile."
 fi
 open HTB.terminal || log "Failed to open HTB terminal profile."
 defaults write com.apple.Terminal "Default Window Settings" "HTB" || log "Failed to set default terminal profile."
@@ -236,7 +246,6 @@ if [ -f "$HOME/macos-bootstrap/iTerm2-setup.fish" ]; then
 else
   log "Fish iTerm2 setup script not found in macos-bootstrap. Skipping."
 fi
-
 
 # Finish Setup
 log "Bootstrap and installation complete. Restart your terminal!"
